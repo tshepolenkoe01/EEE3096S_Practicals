@@ -45,32 +45,40 @@ TIM_HandleTypeDef htim16;
 /* USER CODE BEGIN PV */
 // TODO: Define input variables
 
+
+
 // Define LED patterns
-const uint8_t ledPatterns[10][8] = {
-    {1, 1, 1, 0, 1, 0, 0, 1},
-    {1, 1, 0, 1, 0, 0, 1, 0},
-    {1, 0, 1, 0, 0, 1, 0, 0},
-    {0, 1, 0, 0, 1, 0, 0, 0},
-    {1, 0, 0, 1, 0, 0, 0, 0},
-    {0, 0, 1, 0, 0, 0, 0, 0},
-    {0, 1, 0, 0, 0, 0, 0, 0},
-    {1, 0, 0, 0, 0, 0, 0, 0},
-    {0, 0, 0, 0, 0, 0, 0, 0},
-};
+// Define a 9x8 2D array with each row representing a pattern
+    uint8_t ledPatterns[9][8] = {
+        {1, 1, 1, 0, 1, 0, 0, 1}, // Pattern 1: 0b11101001
+        {1, 1, 0, 1, 0, 0, 1, 0}, // Pattern 2: 0b11010010
+        {1, 0, 1, 0, 0, 1, 0, 0}, // Pattern 3: 0b10100100
+        {0, 1, 0, 0, 1, 0, 0, 0}, // Pattern 4: 0b01001000
+        {1, 0, 0, 1, 0, 0, 0, 0}, // Pattern 5: 0b10010000
+        {0, 0, 1, 0, 0, 0, 0, 0}, // Pattern 6: 0b00100000
+        {0, 1, 0, 0, 0, 0, 0, 0}, // Pattern 7: 0b01000000
+        {1, 0, 0, 0, 0, 0, 0, 0}, // Pattern 8: 0b10000000
+        {0, 0, 0, 0, 0, 0, 0, 0}  // Pattern 9: 0b00000000
+    };
+
 
 // Global variables
 volatile uint8_t currentPattern = 0;
 volatile uint32_t delayTime = 1000; // Default delay time in milliseconds
+uint8_t currentPatternIndex=0;
 
 // Change the timer delay function ***
  void changeDelay(uint32_t newDelay) {
      delayTime = newDelay;
-     __HAL_TIM_SET_AUTORELOAD(&htim16, delayTime); // Update timer ARR value
+     __HAL_TIM_SET_AUTORELOAD(&htim16, delayTime-1); // Update timer ARR value
+
  }
  // Reset the pattern to the first one ***
  void resetPattern(void) {
      currentPattern = 0;
  }
+
+
 
 // Function prototypes
 void updateLEDs(void);
@@ -122,45 +130,97 @@ int main(void)
   /* USER CODE BEGIN 2 */
 
   // TODO: Start timer TIM16
+
   HAL_TIM_Base_Start_IT(&htim16);
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
 
-
-  while (1)
+    while (1)
   {
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
 
     // TODO: Check pushbuttons to change timer delay
-	// Change delay based on button presses ***
 
-	  CheckPB();
-	  updateLEDs();
+    //check if SW0 has been pressed
+    	if( HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_0)==GPIO_PIN_RESET){
+    		//change delay to 0.5 s
+    		 delayTime = 500;
+    		 //set ARR value to 500
+    		 __HAL_TIM_SET_AUTORELOAD(&htim16,delayTime-1);
 
-  }
+    	};
+    	// Wait for the debounce delay ( 5 milli seconds)
+    	    	    HAL_Delay(5);
+
+
+    	//check if SW1 has been pressed
+    	if( HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_1)==GPIO_PIN_RESET){
+    	    //change delay to 2s
+    		delayTime = 2000;
+    		//set ARR value to 500
+    		__HAL_TIM_SET_AUTORELOAD(&htim16,delayTime-1);
+
+
+    	    	};
+    	// Wait for the debounce delay ( 5 milli seconds)
+    	    	    HAL_Delay(5);
+
+
+    	//check if SW2 has been pressed
+    	if( HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_2)==GPIO_PIN_RESET){
+    	    //change delay to 1s
+    		delayTime = 1000;
+    		//set ARR value to 500
+    		__HAL_TIM_SET_AUTORELOAD(&htim16,delayTime-1);
+
+    	    	};
+    	// Wait for the debounce delay ( 5 milli seconds)
+    	    	    HAL_Delay(5);
+
+    	//check if SW3 has been pressed
+    	if( HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_3)==GPIO_PIN_RESET){
+    	   //reset led pattern back to pattern1
+    		currentPatternIndex=0;
+    		//update led pattern
+
+
+
+
+    	    	};
+    	// Wait for the debounce delay ( 5 milli seconds)
+    	    HAL_Delay(5);
+
+  }}
   /* USER CODE END 3 */
-}
+
+//update led function
+
+void updateLEDs(void){
+	 // Array of GPIO pin identifiers for GPIOB
+	    uint16_t gpio_pins[] = {
+	        GPIO_PIN_7, GPIO_PIN_6, GPIO_PIN_5, GPIO_PIN_4,
+	        GPIO_PIN_3, GPIO_PIN_2, GPIO_PIN_1, GPIO_PIN_0
+	    };
+//move through bits of a pattern
+	    for (int i = 0; i < 8; ++i) {
+	           if (ledPatterns[currentPatternIndex][i] == 1) {
+	               HAL_GPIO_WritePin(GPIOB, gpio_pins[i], GPIO_PIN_SET);
+	           } else {
+	               HAL_GPIO_WritePin(GPIOB, gpio_pins[i], GPIO_PIN_RESET);
+	           }
+	       }
+
+	       // Move to the next pattern
+	       currentPatternIndex = (currentPatternIndex + 1) % 9;
+
+	}
 
 
-void CheckPB(){
-	          // Pushbutton 0
-		  if(Hal_GPIO_ReadPin(GPIOA, GPIO_PIN_0)==GPIO_PIN_RESET)
-				  {changeDelay(500);} // 0.5 s delay
-		  if(Hal_GPIO_ReadPin(GPIOA, GPIO_PIN_1)==GPIO_PIN_RESET)
-		  {  changeDelay(2000);} // 2 s delay}
 
-	             // Pushbutton 2
-		  if(Hal_GPIO_ReadPin(GPIOA, GPIO_PIN_2)==GPIO_PIN_RESET)
-	              changeDelay(1000); // 1 s delay
-
-		  if(Hal_GPIO_ReadPin(GPIOA, GPIO_PIN_3)==GPIO_PIN_RESET){ resetPattern(); } // Reset to pattern 1
-
-
-	  }
 
 /**
   * @brief System Clock Configuration
@@ -216,7 +276,7 @@ static void MX_TIM16_Init(void)
   htim16.Instance = TIM16;
   htim16.Init.Prescaler = 8000-1;
   htim16.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim16.Init.Period = 1000-1;
+  htim16.Init.Period = delayTime-1;
   htim16.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   htim16.Init.RepetitionCounter = 0;
   htim16.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_ENABLE;
@@ -377,30 +437,17 @@ void TIM16_IRQHandler(void)
 	HAL_TIM_IRQHandler(&htim16);
 
 	// TODO: Change LED pattern
-	// print something
-	// Check if the timer update flag is set
-	    if (__HAL_TIM_GET_FLAG(&htim16, TIM_FLAG_UPDATE) != RESET) {
-	        // Check if the timer update interrupt is enabled
-	        if (__HAL_TIM_GET_IT_SOURCE(&htim16, TIM_IT_UPDATE) != RESET) {
-	            __HAL_TIM_CLEAR_IT(&htim16, TIM_IT_UPDATE); // Clear the interrupt flag
-	            updateLEDs(); // Update the LEDs based on the current pattern
-	        }
-	    }
+
+
+	// Clear the interrupt flag
+	HAL_TIM_IRQHandler(&htim16);
+
+	  updateLEDs(); // Update the LEDs based on the current pattern
+
+
 	}
 
-	// Update LEDs based on the current pattern ***
-	void updateLEDs(void) {
-	    for (int i = 0; i < 8; i++) {
-	        if (ledPatterns[currentPattern][i]) {
-	            HAL_GPIO_WritePin(GPIOB, (1 << i), GPIO_PIN_SET); // Assuming LEDs are connected to GPIOB
-	        } else {
-	            HAL_GPIO_WritePin(GPIOB, (1 << i), GPIO_PIN_RESET);
-	        }
-	    }
-	    currentPattern = (currentPattern + 1) % 10; // Cycle through patterns
-	}
 
-  
 
 
 /* USER CODE END 4 */
