@@ -63,7 +63,7 @@ TIM_HandleTypeDef htim16;
 
 
 // Global variables
-volatile uint8_t currentPattern = 0;
+//volatile uint8_t currentPattern = 0;
 volatile uint32_t delayTime = 1000; // Default delay time in milliseconds
 uint8_t currentPatternIndex=0;
 
@@ -72,11 +72,11 @@ uint8_t currentPatternIndex=0;
      delayTime = newDelay;
      __HAL_TIM_SET_AUTORELOAD(&htim16, delayTime-1); // Update timer ARR value
 
- }
+ //}
  // Reset the pattern to the first one ***
- void resetPattern(void) {
-     currentPattern = 0;
- }
+ //void resetPattern(void) {
+    // currentPattern = 0;
+ //}
 
 
 
@@ -200,7 +200,7 @@ int main(void)
 //update led function
 
 void updateLEDs(void){
-	 // Array of GPIO pin identifiers for GPIOB
+	 // Array of GPIO pin identifiers for GPIOB for LEDS
 	    uint16_t gpio_pins[] = {
 	        GPIO_PIN_7, GPIO_PIN_6, GPIO_PIN_5, GPIO_PIN_4,
 	        GPIO_PIN_3, GPIO_PIN_2, GPIO_PIN_1, GPIO_PIN_0
@@ -214,7 +214,7 @@ void updateLEDs(void){
 	           }
 	       }
 
-	       // Move to the next pattern
+	       // Move to the next pattern, update the current index
 	       currentPatternIndex = (currentPatternIndex + 1) % 9;
 
 	}
